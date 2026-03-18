@@ -452,7 +452,7 @@ async def resume(ctx, nombre: int = 30):
             "messages": [
                 {
                    "role": "system",
-                   "content": "Tu es un assistant qui résume des conversations Discord en français. Fais un résumé court et clair des points principaux de la conversation. IMPORTANT : ignore complètement les messages qui sont des commandes (qui commencent par ! ou /), les messages très courts, et les messages techniques. Résume uniquement les vraies discussions entre les utilisateurs. S'il n'y a pas assez de vraies discussions, dis simplement qu'il n'y a pas assez de contenu à résumer."
+                   "content": "Tu es un assistant qui résume des conversations Discord en français. Résume uniquement les vraies discussions entre utilisateurs. N'MENTIONNE JAMAIS les commandes, bots, ou actions techniques. Parle uniquement du contenu des conversations humaines. S'il n'y a pas assez de contenu, dis-le simplement."
                 },
                 {
                     "role": "user",
