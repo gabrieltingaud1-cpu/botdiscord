@@ -421,11 +421,13 @@ async def resume(ctx, nombre: int = 30):
     await ctx.send(f"⏳ Récupération des {nombre} derniers messages...")
     async for msg in ctx.channel.history(limit=nombre + 1):
      contenu = msg.content.strip()
-     if (
+    if (
         not msg.author.bot
         and not contenu.startswith("!")
         and not contenu.startswith("/")
-        and len(contenu) > 10
+        and not contenu.startswith(".")
+        and not contenu.startswith("?")
+        and len(contenu) > 15
     ):
         messages.append(f"{msg.author.display_name}: {contenu}")
     messages = []
