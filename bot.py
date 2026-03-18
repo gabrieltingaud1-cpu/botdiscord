@@ -1,11 +1,14 @@
 import discord
 from discord.ext import commands
+from dotenv import load_dotenv
 import asyncio
+import os
 
 # ══════════════════════════════════════════
-#   CONFIG — mets ton token ici
+#   CONFIG — token chargé depuis .env
 # ══════════════════════════════════════════
-TOKEN = "TON_TOKEN_ICI"
+load_dotenv()
+TOKEN = os.getenv("TOKEN")
 
 # ══════════════════════════════════════════
 #   STRUCTURE DU SERVEUR
@@ -14,76 +17,76 @@ STRUCTURE = [
     {
         "categorie": "📢 INFORMATIONS",
         "salons": [
-            {"nom": "📜│règles",         "type": "texte", "desc": "Règles du serveur"},
-            {"nom": "📣│annonces",        "type": "texte", "desc": "Annonces importantes"},
-            {"nom": "👋│bienvenue",       "type": "texte", "desc": "Accueil des nouveaux membres"},
-            {"nom": "🎭│rôles",           "type": "texte", "desc": "Choisis tes rôles ici"},
+            {"nom": "📜│règles",          "type": "texte", "desc": "Règles du serveur"},
+            {"nom": "📣│annonces",         "type": "texte", "desc": "Annonces importantes"},
+            {"nom": "👋│bienvenue",        "type": "texte", "desc": "Accueil des nouveaux membres"},
+            {"nom": "🎭│rôles",            "type": "texte", "desc": "Choisis tes rôles ici"},
         ]
     },
     {
         "categorie": "💬 GÉNÉRAL",
         "salons": [
-            {"nom": "💬│général",         "type": "texte", "desc": "Discussion générale"},
-            {"nom": "😂│memes",           "type": "texte", "desc": "Partage tes memes"},
-            {"nom": "📸│médias",          "type": "texte", "desc": "Photos, vidéos, captures"},
-            {"nom": "🎵│musique",         "type": "texte", "desc": "Partage ta musique"},
-            {"nom": "🔊│vocal-général",   "type": "vocal"},
-            {"nom": "🎙️│détente",         "type": "vocal"},
+            {"nom": "💬│général",          "type": "texte", "desc": "Discussion générale"},
+            {"nom": "😂│memes",            "type": "texte", "desc": "Partage tes memes"},
+            {"nom": "📸│médias",           "type": "texte", "desc": "Photos, vidéos, captures"},
+            {"nom": "🎵│musique",          "type": "texte", "desc": "Partage ta musique"},
+            {"nom": "🔊│vocal-général",    "type": "vocal"},
+            {"nom": "🎙️│détente",          "type": "vocal"},
         ]
     },
     {
         "categorie": "🎮 GAMING",
         "salons": [
-            {"nom": "🎮│gaming-général",  "type": "texte", "desc": "Tout sur le gaming"},
-            {"nom": "🚀│rocket-league",   "type": "texte", "desc": "Rocket League"},
-            {"nom": "🏆│fortnite",        "type": "texte", "desc": "Fortnite"},
-            {"nom": "🔫│fps",             "type": "texte", "desc": "CS2, Valorant, etc."},
-            {"nom": "⚔️│rpg-aventure",    "type": "texte", "desc": "RPG et jeux d'aventure"},
-            {"nom": "🎯│recherche-joueurs","type": "texte", "desc": "LFG — cherche des coéquipiers"},
-            {"nom": "🎮│gaming-vocal",    "type": "vocal"},
-            {"nom": "🕹️│gaming-vocal-2",  "type": "vocal"},
+            {"nom": "🎮│gaming-général",   "type": "texte", "desc": "Tout sur le gaming"},
+            {"nom": "🚀│rocket-league",    "type": "texte", "desc": "Rocket League"},
+            {"nom": "🏆│fortnite",         "type": "texte", "desc": "Fortnite"},
+            {"nom": "🔫│fps",              "type": "texte", "desc": "CS2, Valorant, etc."},
+            {"nom": "⚔️│rpg-aventure",     "type": "texte", "desc": "RPG et jeux d'aventure"},
+            {"nom": "🎯│recherche-joueurs", "type": "texte", "desc": "LFG — cherche des coéquipiers"},
+            {"nom": "🎮│gaming-vocal",     "type": "vocal"},
+            {"nom": "🕹️│gaming-vocal-2",   "type": "vocal"},
         ]
     },
     {
         "categorie": "💻 CODE & TECH",
         "salons": [
-            {"nom": "💻│code-général",    "type": "texte", "desc": "Programmation générale"},
-            {"nom": "🐍│python",          "type": "texte", "desc": "Python"},
-            {"nom": "🟨│javascript",      "type": "texte", "desc": "JavaScript / TypeScript"},
-            {"nom": "🌐│web",             "type": "texte", "desc": "HTML, CSS, frameworks web"},
-            {"nom": "🤖│ia-ml",           "type": "texte", "desc": "Intelligence artificielle & ML"},
-            {"nom": "🛠️│projets",         "type": "texte", "desc": "Montre tes projets"},
-            {"nom": "❓│aide-code",        "type": "texte", "desc": "Pose tes questions de code"},
-            {"nom": "🖥️│tech-vocal",      "type": "vocal"},
+            {"nom": "💻│code-général",     "type": "texte", "desc": "Programmation générale"},
+            {"nom": "🐍│python",           "type": "texte", "desc": "Python"},
+            {"nom": "🟨│javascript",       "type": "texte", "desc": "JavaScript / TypeScript"},
+            {"nom": "🌐│web",              "type": "texte", "desc": "HTML, CSS, frameworks web"},
+            {"nom": "🤖│ia-ml",            "type": "texte", "desc": "Intelligence artificielle & ML"},
+            {"nom": "🛠️│projets",          "type": "texte", "desc": "Montre tes projets"},
+            {"nom": "❓│aide-code",         "type": "texte", "desc": "Pose tes questions de code"},
+            {"nom": "🖥️│tech-vocal",       "type": "vocal"},
         ]
     },
     {
         "categorie": "🌟 COMMUNAUTÉ",
         "salons": [
-            {"nom": "💡│suggestions",     "type": "texte", "desc": "Propose des idées"},
-            {"nom": "📊│sondages",        "type": "texte", "desc": "Votes et sondages"},
-            {"nom": "🏅│présentations",   "type": "texte", "desc": "Présente-toi ici"},
-            {"nom": "📰│partage",         "type": "texte", "desc": "Articles, liens intéressants"},
+            {"nom": "💡│suggestions",      "type": "texte", "desc": "Propose des idées"},
+            {"nom": "📊│sondages",         "type": "texte", "desc": "Votes et sondages"},
+            {"nom": "🏅│présentations",    "type": "texte", "desc": "Présente-toi ici"},
+            {"nom": "📰│partage",          "type": "texte", "desc": "Articles, liens intéressants"},
         ]
     },
     {
         "categorie": "🔧 MODÉRATION",
         "salons": [
-            {"nom": "🔨│logs",            "type": "texte", "desc": "Logs de modération (privé)"},
-            {"nom": "📋│rapports",        "type": "texte", "desc": "Signalements (privé)"},
+            {"nom": "🔨│logs",             "type": "texte", "desc": "Logs de modération (privé)"},
+            {"nom": "📋│rapports",         "type": "texte", "desc": "Signalements (privé)"},
         ]
     },
 ]
 
 ROLES = [
-    {"nom": "👑 Admin",        "couleur": discord.Color.red(),    "permissions": discord.Permissions.all()},
-    {"nom": "🛡️ Modérateur",   "couleur": discord.Color.orange(), "permissions": discord.Permissions(
+    {"nom": "👑 Admin",       "couleur": discord.Color.red(),    "permissions": discord.Permissions.all()},
+    {"nom": "🛡️ Modérateur",  "couleur": discord.Color.orange(), "permissions": discord.Permissions(
         kick_members=True, ban_members=True, manage_messages=True, mute_members=True
     )},
-    {"nom": "⭐ VIP",          "couleur": discord.Color.gold(),   "permissions": discord.Permissions.none()},
-    {"nom": "🎮 Gamer",        "couleur": discord.Color.green(),  "permissions": discord.Permissions.none()},
-    {"nom": "💻 Développeur",  "couleur": discord.Color.blue(),   "permissions": discord.Permissions.none()},
-    {"nom": "🌱 Membre",       "couleur": discord.Color.teal(),   "permissions": discord.Permissions.none()},
+    {"nom": "⭐ VIP",         "couleur": discord.Color.gold(),   "permissions": discord.Permissions.none()},
+    {"nom": "🎮 Gamer",       "couleur": discord.Color.green(),  "permissions": discord.Permissions.none()},
+    {"nom": "💻 Développeur", "couleur": discord.Color.blue(),   "permissions": discord.Permissions.none()},
+    {"nom": "🌱 Membre",      "couleur": discord.Color.teal(),   "permissions": discord.Permissions.none()},
 ]
 
 # ══════════════════════════════════════════
@@ -91,22 +94,56 @@ ROLES = [
 # ══════════════════════════════════════════
 intents = discord.Intents.default()
 intents.message_content = True
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
+
+# ══════════════════════════════════════════
+#   DONNÉES EN MÉMOIRE
+# ══════════════════════════════════════════
+xp_data = {}
+warnings_data = {}
+msg_count = {}
 
 
+# ══════════════════════════════════════════
+#   ÉVÉNEMENTS
+# ══════════════════════════════════════════
 @bot.event
 async def on_ready():
     print(f"✅ Connecté en tant que {bot.user}")
     print("👉 Utilise !setup dans ton serveur pour tout créer !")
 
 
+@bot.event
+async def on_message(message):
+    if message.author.bot:
+        return
+    uid = str(message.author.id)
+    msg_count[uid] = msg_count.get(uid, 0) + 1
+    if uid not in xp_data:
+        xp_data[uid] = {"xp": 0, "level": 1}
+    xp_data[uid]["xp"] += 5
+    xp_needed = xp_data[uid]["level"] * 100
+    if xp_data[uid]["xp"] >= xp_needed:
+        xp_data[uid]["xp"] -= xp_needed
+        xp_data[uid]["level"] += 1
+        embed = discord.Embed(
+            title="⬆️ Level Up !",
+            description=f"Félicitations {message.author.mention} ! Tu es maintenant **niveau {xp_data[uid]['level']}** !",
+            color=discord.Color.gold()
+        )
+        await message.channel.send(embed=embed)
+    await bot.process_commands(message)
+
+
+# ══════════════════════════════════════════
+#   COMMANDE SETUP
+# ══════════════════════════════════════════
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def setup(ctx):
     guild = ctx.guild
     print("⏳ Démarrage du setup...")
 
-    # ── Supprime les salons ──────────────────────────────────
     print("🗑️ Nettoyage des salons existants...")
     for channel in guild.channels:
         try:
@@ -114,7 +151,6 @@ async def setup(ctx):
         except Exception:
             pass
 
-    # ── Supprime les rôles ───────────────────────────────────
     print("🗑️ Nettoyage des rôles existants...")
     for role in guild.roles:
         if role.name != "@everyone" and not role.managed:
@@ -123,7 +159,6 @@ async def setup(ctx):
             except Exception:
                 pass
 
-    # ── Crée les rôles ───────────────────────────────────────
     print("🎭 Création des rôles...")
     roles_crees = {}
     for r in ROLES:
@@ -140,36 +175,23 @@ async def setup(ctx):
 
     role_mod = roles_crees.get("🛡️ Modérateur")
 
-    # ── Crée les catégories et salons ────────────────────────
     for i, cat in enumerate(STRUCTURE):
         print(f"📁 Création : {cat['categorie']} ({i+1}/{len(STRUCTURE)})...")
-
         overwrites = {}
         if "MODÉRATION" in cat["categorie"]:
-            overwrites = {
-                guild.default_role: discord.PermissionOverwrite(read_messages=False),
-            }
+            overwrites = {guild.default_role: discord.PermissionOverwrite(read_messages=False)}
             if role_mod:
                 overwrites[role_mod] = discord.PermissionOverwrite(read_messages=True)
 
         categorie = await guild.create_category(cat["categorie"], overwrites=overwrites)
-
         for salon in cat["salons"]:
             if salon["type"] == "texte":
-                await categorie.create_text_channel(
-                    salon["nom"],
-                    topic=salon.get("desc", ""),
-                    overwrites=overwrites
-                )
+                await categorie.create_text_channel(salon["nom"], topic=salon.get("desc", ""), overwrites=overwrites)
             else:
-                await categorie.create_voice_channel(
-                    salon["nom"],
-                    overwrites=overwrites
-                )
+                await categorie.create_voice_channel(salon["nom"], overwrites=overwrites)
             print(f"   💬 Salon créé : {salon['nom']}")
             await asyncio.sleep(0.4)
 
-    # ── Message de bienvenue ─────────────────────────────────
     for channel in guild.text_channels:
         if "bienvenue" in channel.name:
             embed = discord.Embed(
@@ -197,58 +219,30 @@ async def setup_error(ctx, error):
 
 
 # ══════════════════════════════════════════
-#   SYSTÈME XP
-# ══════════════════════════════════════════
-xp_data = {}
-warnings_data = {}
-
-@bot.event
-async def on_message(message):
-    if message.author.bot:
-        return
-    uid = str(message.author.id)
-    if uid not in xp_data:
-        xp_data[uid] = {"xp": 0, "level": 1}
-    xp_data[uid]["xp"] += 5
-    xp_needed = xp_data[uid]["level"] * 100
-    if xp_data[uid]["xp"] >= xp_needed:
-        xp_data[uid]["xp"] -= xp_needed
-        xp_data[uid]["level"] += 1
-        embed = discord.Embed(
-            title="⬆️ Level Up !",
-            description=f"Félicitations {message.author.mention} ! Tu es maintenant **niveau {xp_data[uid]['level']}** !",
-            color=discord.Color.gold()
-        )
-        await message.channel.send(embed=embed)
-    await bot.process_commands(message)
-
-
-# ══════════════════════════════════════════
 #   COMMANDES DE BASE
 # ══════════════════════════════════════════
-
-@bot.command()
-async def help(ctx):
+@bot.command(name="help")
+async def help_cmd(ctx):
     embed = discord.Embed(title="📋 Commandes du bot", color=discord.Color.blurple())
     embed.add_field(name="🌍 Commandes de base", value=(
         "`!help` — Affiche cette aide\n"
         "`!ping` — Latence du bot\n"
         "`!hello` — Le bot te salue\n"
-        "`!rank` — Ton niveau et XP\n"
-        "`!xp @user` — XP d'un membre\n"
-        "`!userinfos @user` — Infos sur un membre\n"
+        "`!rank [@membre]` — Niveau et XP\n"
+        "`!xp [@membre]` — Même chose que !rank\n"
+        "`!userinfos [@membre]` — Infos sur un membre\n"
         "`!serveurinfos` — Infos sur le serveur\n"
-        "`!avatar @user` — Avatar d'un membre\n"
-        "`!msg` — Nombre de messages envoyés\n"
+        "`!avatar [@membre]` — Avatar d'un membre\n"
+        "`!msg [@membre]` — Nombre de messages\n"
     ), inline=False)
     embed.add_field(name="🔒 Commandes admin", value=(
-        "`!kick @user [raison]` — Expulser\n"
-        "`!ban @user [raison]` — Bannir\n"
-        "`!unban user#0000` — Débannir\n"
-        "`!mute @user` — Rendre muet\n"
-        "`!unmute @user` — Retirer le mute\n"
-        "`!warn @user [raison]` — Avertir\n"
-        "`!warnings @user` — Voir les avertissements\n"
+        "`!kick @membre [raison]` — Expulser\n"
+        "`!ban @membre [raison]` — Bannir\n"
+        "`!unban pseudo#0000` — Débannir\n"
+        "`!mute @membre [raison]` — Rendre muet\n"
+        "`!unmute @membre` — Retirer le mute\n"
+        "`!warn @membre [raison]` — Avertir\n"
+        "`!warnings @membre` — Voir les avertissements\n"
         "`!lock` — Verrouiller le salon\n"
         "`!unlock` — Déverrouiller le salon\n"
     ), inline=False)
@@ -333,8 +327,6 @@ async def avatar(ctx, member: discord.Member = None):
     await ctx.send(embed=embed)
 
 
-msg_count = {}
-
 @bot.command(name="msg")
 async def msg_cmd(ctx, member: discord.Member = None):
     member = member or ctx.author
@@ -347,18 +339,10 @@ async def msg_cmd(ctx, member: discord.Member = None):
     )
     await ctx.send(embed=embed)
 
-@bot.listen("on_message")
-async def count_messages(message):
-    if message.author.bot:
-        return
-    uid = str(message.author.id)
-    msg_count[uid] = msg_count.get(uid, 0) + 1
-
 
 # ══════════════════════════════════════════
 #   COMMANDES ADMIN
 # ══════════════════════════════════════════
-
 def is_admin():
     async def predicate(ctx):
         return ctx.author.guild_permissions.administrator or \
