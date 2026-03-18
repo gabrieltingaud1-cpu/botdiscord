@@ -4,12 +4,14 @@ from discord import app_commands
 from dotenv import load_dotenv
 import asyncio
 import os
+import aiohttp
 
 # ══════════════════════════════════════════
-#   CONFIG — token chargé depuis .env
+#   CONFIG — tokens chargés depuis .env
 # ══════════════════════════════════════════
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
+GROQ_KEY = os.getenv("GROQ_KEY")
 
 # ══════════════════════════════════════════
 #   STRUCTURE DU SERVEUR
@@ -137,17 +139,15 @@ async def on_message(message):
 
 
 # ══════════════════════════════════════════
-#   COMMANDE !sync — active les slash commands
+#   COMMANDE !sync
 # ══════════════════════════════════════════
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def sync(ctx):
     try:
-        # Sync sur le serveur actuel = instantané
         bot.tree.copy_global_to(guild=discord.Object(id=ctx.guild.id))
         synced = await bot.tree.sync(guild=discord.Object(id=ctx.guild.id))
         await ctx.send(f"✅ **{len(synced)} slash commande(s) synchronisée(s) !**\nTu peux maintenant utiliser `/aide` 🎉")
-        print(f"✅ {len(synced)} slash commande(s) sync sur {ctx.guild.name}")
     except Exception as e:
         await ctx.send(f"❌ Erreur : {e}")
 
@@ -159,13 +159,15 @@ def est_admin(interaction: discord.Interaction) -> bool:
     return interaction.user.guild_permissions.administrator or \
            any(r.name in ["👑 Admin", "🛡️ Modérateur"] for r in interaction.user.roles)
 
+def est_admin_ctx(ctx) -> bool:
+    return ctx.author.guild_permissions.administrator or \
+           any(r.name in ["👑 Admin", "🛡️ Modérateur"] for r in ctx.author.roles)
+
 
 @bot.tree.command(name="aide", description="Affiche la liste des commandes")
 async def slash_aide(interaction: discord.Interaction):
     admin = est_admin(interaction)
-
     embed = discord.Embed(title="📋 Commandes du bot", color=discord.Color.blurple())
-
     embed.add_field(name="🌍 Commandes de base", value=(
         "`!help` — Affiche cette aide\n"
         "`!ping` — Latence du bot\n"
@@ -176,8 +178,8 @@ async def slash_aide(interaction: discord.Interaction):
         "`!serveurinfos` — Infos sur le serveur\n"
         "`!avatar [@membre]` — Avatar d'un membre\n"
         "`!msg [@membre]` — Nombre de messages\n"
+        "`!resume [nombre]` — Résume les derniers messages du salon\n"
     ), inline=False)
-
     if admin:
         embed.add_field(name="🔒 Commandes admin", value=(
             "`!kick @membre [raison]` — Expulser\n"
@@ -193,7 +195,6 @@ async def slash_aide(interaction: discord.Interaction):
         embed.set_footer(text="✅ Tu vois les commandes admin car tu es Admin/Modérateur")
     else:
         embed.set_footer(text="Préfixe : !")
-
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
@@ -244,7 +245,6 @@ async def setup(ctx):
             overwrites = {guild.default_role: discord.PermissionOverwrite(read_messages=False)}
             if role_mod:
                 overwrites[role_mod] = discord.PermissionOverwrite(read_messages=True)
-
         categorie = await guild.create_category(cat["categorie"], overwrites=overwrites)
         for salon in cat["salons"]:
             if salon["type"] == "texte":
@@ -271,8 +271,6 @@ async def setup(ctx):
             break
 
     print("✅ Serveur créé avec succès !")
-    print(f"📁 {len(STRUCTURE)} catégories | 💬 {sum(len(c['salons']) for c in STRUCTURE)} salons | 🎭 {len(ROLES)} rôles")
-
 
 @setup.error
 async def setup_error(ctx, error):
@@ -285,6 +283,7 @@ async def setup_error(ctx, error):
 # ══════════════════════════════════════════
 @bot.command(name="help")
 async def help_cmd(ctx):
+    admin = est_admin_ctx(ctx)
     embed = discord.Embed(title="📋 Commandes du bot", color=discord.Color.blurple())
     embed.add_field(name="🌍 Commandes de base", value=(
         "`!help` — Affiche cette aide\n"
@@ -296,19 +295,23 @@ async def help_cmd(ctx):
         "`!serveurinfos` — Infos sur le serveur\n"
         "`!avatar [@membre]` — Avatar d'un membre\n"
         "`!msg [@membre]` — Nombre de messages\n"
+        "`!resume [nombre]` — Résume les derniers messages\n"
     ), inline=False)
-    embed.add_field(name="🔒 Commandes admin", value=(
-        "`!kick @membre [raison]` — Expulser\n"
-        "`!ban @membre [raison]` — Bannir\n"
-        "`!unban pseudo#0000` — Débannir\n"
-        "`!mute @membre [raison]` — Rendre muet\n"
-        "`!unmute @membre` — Retirer le mute\n"
-        "`!warn @membre [raison]` — Avertir\n"
-        "`!warnings @membre` — Voir les avertissements\n"
-        "`!lock` — Verrouiller le salon\n"
-        "`!unlock` — Déverrouiller le salon\n"
-    ), inline=False)
-    embed.set_footer(text="Préfixe : !")
+    if admin:
+        embed.add_field(name="🔒 Commandes admin", value=(
+            "`!kick @membre [raison]` — Expulser\n"
+            "`!ban @membre [raison]` — Bannir\n"
+            "`!unban pseudo#0000` — Débannir\n"
+            "`!mute @membre [raison]` — Rendre muet\n"
+            "`!unmute @membre` — Retirer le mute\n"
+            "`!warn @membre [raison]` — Avertir\n"
+            "`!warnings @membre` — Voir les avertissements\n"
+            "`!lock` — Verrouiller le salon\n"
+            "`!unlock` — Déverrouiller le salon\n"
+        ), inline=False)
+        embed.set_footer(text="✅ Tu vois les commandes admin car tu es Admin/Modérateur")
+    else:
+        embed.set_footer(text="Préfixe : !")
     await ctx.send(embed=embed)
 
 
@@ -399,6 +402,75 @@ async def msg_cmd(ctx, member: discord.Member = None):
         description=f"{member.mention} a envoyé **{count}** message(s) depuis que le bot est en ligne.",
         color=discord.Color.blurple()
     )
+    await ctx.send(embed=embed)
+
+
+# ══════════════════════════════════════════
+#   COMMANDE !resume — résumé IA avec Groq
+# ══════════════════════════════════════════
+@bot.command(name="resume")
+async def resume(ctx, nombre: int = 30):
+    if not GROQ_KEY:
+        await ctx.send("❌ Clé `GROQ_KEY` manquante dans le fichier `.env` !\nVa sur https://console.groq.com pour en créer une gratuite.")
+        return
+
+    if nombre < 5 or nombre > 100:
+        await ctx.send("❌ Indique un nombre entre 5 et 100. Ex: `!resume 50`")
+        return
+
+    await ctx.send(f"⏳ Récupération des {nombre} derniers messages...")
+
+    messages = []
+    async for msg in ctx.channel.history(limit=nombre + 1):
+      if not msg.author.bot and not msg.content.startswith("!") and not msg.content.startswith("/"):
+        messages.append(f"{msg.author.display_name}: {msg.content}")
+
+    messages.reverse()
+    messages = messages[:-1]
+
+    if not messages:
+        await ctx.send("❌ Aucun message à résumer dans ce salon.")
+        return
+
+    conversation = "\n".join(messages)
+
+    async with aiohttp.ClientSession() as session:
+        headers = {
+            "Authorization": f"Bearer {GROQ_KEY}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": "llama3-8b-8192",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "Tu es un assistant qui résume des conversations Discord en français. Fais un résumé court et clair des points principaux de la conversation."
+                },
+                {
+                    "role": "user",
+                    "content": f"Voici les derniers messages de ce salon Discord, résume-les en quelques points :\n\n{conversation}"
+                }
+            ],
+            "max_tokens": 500
+        }
+
+        try:
+            async with session.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload) as resp:
+                if resp.status != 200:
+                    await ctx.send(f"❌ Erreur Groq (code {resp.status}). Vérifie ta clé API.")
+                    return
+                data = await resp.json()
+                resume_text = data["choices"][0]["message"]["content"]
+        except Exception as e:
+            await ctx.send(f"❌ Erreur lors de la connexion à Groq : {e}")
+            return
+
+    embed = discord.Embed(
+        title=f"📝 Résumé des {nombre} derniers messages",
+        description=resume_text,
+        color=discord.Color.blurple()
+    )
+    embed.set_footer(text=f"Résumé demandé par {ctx.author.display_name} • Propulsé par Groq IA")
     await ctx.send(embed=embed)
 
 
