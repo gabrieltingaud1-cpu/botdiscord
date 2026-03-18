@@ -1,8 +1,10 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 from dotenv import load_dotenv
 import os
 import random
+import json
 
 load_dotenv()
 
@@ -15,12 +17,99 @@ bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 MON_ID = 1106997195980427354
 
 # ================================
+#         SYSTÈME XP
+# ================================
+
+def charger_xp():
+    if os.path.exists("xp.json"):
+        with open("xp.json", "r") as f:
+            return json.load(f)
+    return {}
+
+def sauvegarder_xp(data):
+    with open("xp.json", "w") as f:
+        json.dump(data, f)
+
+def xp_pour_niveau(niveau):
+    return niveau * 100
+
+xp_data = charger_xp()
+
+@bot.event
+async def on_message(message):
+    if message.author.bot:
+        return
+
+    user_id = str(message.author.id)
+
+    if user_id not in xp_data:
+        xp_data[user_id] = {"xp": 0, "niveau": 1}
+
+    xp_data[user_id]["xp"] += random.randint(5, 15)
+    niveau_actuel = xp_data[user_id]["niveau"]
+    xp_necessaire = xp_pour_niveau(niveau_actuel)
+
+    if xp_data[user_id]["xp"] >= xp_necessaire:
+        xp_data[user_id]["xp"] -= xp_necessaire
+        xp_data[user_id]["niveau"] += 1
+        nouveau_niveau = xp_data[user_id]["niveau"]
+        await message.channel.send(f"🎉 Félicitations {message.author.mention} ! Tu es passé au **niveau {nouveau_niveau}** !")
+
+    sauvegarder_xp(xp_data)
+    await bot.process_commands(message)
+
+@bot.tree.command(name="niveau", description="Voir le niveau d'un membre")
+@app_commands.describe(membre="Le membre dont tu veux voir le niveau")
+async def niveau(interaction: discord.Interaction, membre: discord.Member = None):
+    membre = membre or interaction.user
+    user_id = str(membre.id)
+
+    if user_id not in xp_data:
+        await interaction.response.send_message(f"{membre.mention} n'a pas encore de XP !")
+        return
+
+    xp = xp_data[user_id]["xp"]
+    niv = xp_data[user_id]["niveau"]
+    xp_necessaire = xp_pour_niveau(niv)
+
+    embed = discord.Embed(title=f"Niveau de {membre.name}", color=0x00bfff)
+    embed.add_field(name="🏆 Niveau", value=str(niv), inline=True)
+    embed.add_field(name="✨ XP", value=f"{xp}/{xp_necessaire}", inline=True)
+    embed.set_thumbnail(url=membre.avatar.url if membre.avatar else membre.default_avatar.url)
+    await interaction.response.send_message(embed=embed)
+
+@bot.command()
+async def classement(ctx):
+    if not xp_data:
+        await ctx.send("Personne n'a encore de XP !")
+        return
+
+    tries = sorted(xp_data.items(), key=lambda x: (x[1]["niveau"], x[1]["xp"]), reverse=True)
+
+    embed = discord.Embed(title="🏆 Classement XP", color=0x00bfff)
+    medailles = ["🥇", "🥈", "🥉"]
+
+    for i, (user_id, data) in enumerate(tries[:10]):
+        membre = ctx.guild.get_member(int(user_id))
+        if membre:
+            medaille = medailles[i] if i < 3 else f"**#{i+1}**"
+            embed.add_field(
+                name=f"{medaille} {membre.name}",
+                value=f"Niveau {data['niveau']} • {data['xp']} XP",
+                inline=False
+            )
+
+    await ctx.send(embed=embed)
+
+# ================================
 #           GÉNÉRAL
 # ================================
 
 @bot.event
 async def on_ready():
     print(f"Connecté en tant que {bot.user}")
+    await bot.tree.sync()
+    print("Commandes slash synchronisées !")
 
 @bot.event
 async def on_member_join(member):
@@ -47,6 +136,7 @@ async def help(ctx):
     embed = discord.Embed(title="Commandes du bot 📋", color=0x00bfff)
     embed.add_field(name="🌟 Général", value="`!ping` `!hello` `!help`", inline=False)
     embed.add_field(name="🎮 Jeux", value="`!pile_ou_face` `!dé` `!rps <pierre/feuille/ciseaux>` `!chiffre` `!deviner <nombre>`", inline=False)
+    embed.add_field(name="⭐ Niveaux", value="`/niveau` `!classement`", inline=False)
     if ctx.author.id == MON_ID:
         embed.add_field(name="🔨 Modération", value="`!kick <membre>` `!ban <membre>` `!mute <membre>` `!unmute <membre>` `!clear <nombre>`", inline=False)
     await ctx.send(embed=embed)
