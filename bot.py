@@ -208,11 +208,11 @@ async def resume_chat(interaction: discord.Interaction):
                     "messages": [
                         {
                             "role": "system",
-                            "content": "Tu es un assistant qui résume des conversations Discord en français. Tu vas droit au but, sans phrase d'introduction, sans 'Voici un résumé', tu commences directement par le contenu du résumé."
+                            "content": "Tu résumes des conversations Discord en français. Sois très court et simple. Pas de phrase d'introduction. Ignore les messages incompréhensibles ou aléatoires. Parle uniquement des vrais sujets de conversation."
                         },
                         {
                             "role": "user",
-                            "content": f"Résume cette conversation Discord en 5 lignes maximum, sans phrase d'introduction, commence directement par le résumé :\n\n{conversation}"
+                            "content": f"Résume en 3 phrases maximum ce dont les gens ont parlé :\n\n{conversation}"
                         }
                     ]
                 }
