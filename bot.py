@@ -111,12 +111,7 @@ msg_count = {}
 @bot.event
 async def on_ready():
     print(f"✅ Connecté en tant que {bot.user}")
-    try:
-        synced = await bot.tree.sync()
-        print(f"✅ {len(synced)} slash commande(s) synchronisée(s)")
-    except Exception as e:
-        print(f"❌ Erreur sync slash : {e}")
-    print("👉 Utilise !setup ou /aide dans ton serveur !")
+    print("👉 Tape !sync dans Discord pour activer les slash commands !")
 
 
 @bot.event
@@ -142,16 +137,32 @@ async def on_message(message):
 
 
 # ══════════════════════════════════════════
+#   COMMANDE !sync — active les slash commands
+# ══════════════════════════════════════════
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def sync(ctx):
+    try:
+        # Sync sur le serveur actuel = instantané
+        bot.tree.copy_global_to(guild=discord.Object(id=ctx.guild.id))
+        synced = await bot.tree.sync(guild=discord.Object(id=ctx.guild.id))
+        await ctx.send(f"✅ **{len(synced)} slash commande(s) synchronisée(s) !**\nTu peux maintenant utiliser `/aide` 🎉")
+        print(f"✅ {len(synced)} slash commande(s) sync sur {ctx.guild.name}")
+    except Exception as e:
+        await ctx.send(f"❌ Erreur : {e}")
+
+
+# ══════════════════════════════════════════
 #   SLASH COMMAND /aide
 # ══════════════════════════════════════════
-def is_admin_user(interaction: discord.Interaction) -> bool:
+def est_admin(interaction: discord.Interaction) -> bool:
     return interaction.user.guild_permissions.administrator or \
            any(r.name in ["👑 Admin", "🛡️ Modérateur"] for r in interaction.user.roles)
 
 
 @bot.tree.command(name="aide", description="Affiche la liste des commandes")
 async def slash_aide(interaction: discord.Interaction):
-    est_admin = is_admin_user(interaction)
+    admin = est_admin(interaction)
 
     embed = discord.Embed(title="📋 Commandes du bot", color=discord.Color.blurple())
 
@@ -167,7 +178,7 @@ async def slash_aide(interaction: discord.Interaction):
         "`!msg [@membre]` — Nombre de messages\n"
     ), inline=False)
 
-    if est_admin:
+    if admin:
         embed.add_field(name="🔒 Commandes admin", value=(
             "`!kick @membre [raison]` — Expulser\n"
             "`!ban @membre [raison]` — Bannir\n"
@@ -179,7 +190,7 @@ async def slash_aide(interaction: discord.Interaction):
             "`!lock` — Verrouiller le salon\n"
             "`!unlock` — Déverrouiller le salon\n"
         ), inline=False)
-        embed.set_footer(text="Tu vois les commandes admin car tu es Admin/Modérateur ✅")
+        embed.set_footer(text="✅ Tu vois les commandes admin car tu es Admin/Modérateur")
     else:
         embed.set_footer(text="Préfixe : !")
 
