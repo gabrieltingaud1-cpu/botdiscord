@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 from dotenv import load_dotenv
 import asyncio
 import os
@@ -110,7 +111,12 @@ msg_count = {}
 @bot.event
 async def on_ready():
     print(f"✅ Connecté en tant que {bot.user}")
-    print("👉 Utilise !setup dans ton serveur pour tout créer !")
+    try:
+        synced = await bot.tree.sync()
+        print(f"✅ {len(synced)} slash commande(s) synchronisée(s)")
+    except Exception as e:
+        print(f"❌ Erreur sync slash : {e}")
+    print("👉 Utilise !setup ou /aide dans ton serveur !")
 
 
 @bot.event
@@ -133,6 +139,51 @@ async def on_message(message):
         )
         await message.channel.send(embed=embed)
     await bot.process_commands(message)
+
+
+# ══════════════════════════════════════════
+#   SLASH COMMAND /aide
+# ══════════════════════════════════════════
+def is_admin_user(interaction: discord.Interaction) -> bool:
+    return interaction.user.guild_permissions.administrator or \
+           any(r.name in ["👑 Admin", "🛡️ Modérateur"] for r in interaction.user.roles)
+
+
+@bot.tree.command(name="aide", description="Affiche la liste des commandes")
+async def slash_aide(interaction: discord.Interaction):
+    est_admin = is_admin_user(interaction)
+
+    embed = discord.Embed(title="📋 Commandes du bot", color=discord.Color.blurple())
+
+    embed.add_field(name="🌍 Commandes de base", value=(
+        "`!help` — Affiche cette aide\n"
+        "`!ping` — Latence du bot\n"
+        "`!hello` — Le bot te salue\n"
+        "`!rank [@membre]` — Niveau et XP\n"
+        "`!xp [@membre]` — Même chose que !rank\n"
+        "`!userinfos [@membre]` — Infos sur un membre\n"
+        "`!serveurinfos` — Infos sur le serveur\n"
+        "`!avatar [@membre]` — Avatar d'un membre\n"
+        "`!msg [@membre]` — Nombre de messages\n"
+    ), inline=False)
+
+    if est_admin:
+        embed.add_field(name="🔒 Commandes admin", value=(
+            "`!kick @membre [raison]` — Expulser\n"
+            "`!ban @membre [raison]` — Bannir\n"
+            "`!unban pseudo#0000` — Débannir\n"
+            "`!mute @membre [raison]` — Rendre muet\n"
+            "`!unmute @membre` — Retirer le mute\n"
+            "`!warn @membre [raison]` — Avertir\n"
+            "`!warnings @membre` — Voir les avertissements\n"
+            "`!lock` — Verrouiller le salon\n"
+            "`!unlock` — Déverrouiller le salon\n"
+        ), inline=False)
+        embed.set_footer(text="Tu vois les commandes admin car tu es Admin/Modérateur ✅")
+    else:
+        embed.set_footer(text="Préfixe : !")
+
+    await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 # ══════════════════════════════════════════
