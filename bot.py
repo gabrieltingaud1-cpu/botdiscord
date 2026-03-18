@@ -171,13 +171,13 @@ async def classement(interaction: discord.Interaction):
 #           UTILITAIRES
 # ================================
 
-@bot.tree.command(name="resume_chat", description="Résume les 50 derniers messages du salon")
+@bot.tree.command(name="resume_chat", description="Résume les 25 derniers messages du salon")
 async def resume_chat(interaction: discord.Interaction):
     try:
         await interaction.response.defer()
 
         messages = []
-        async for message in interaction.channel.history(limit=50):
+        async for message in interaction.channel.history(limit=25):
             if not message.author.bot and message.content:
                 if not message.content.startswith("/") and not message.content.startswith("!"):
                     messages.append(f"{message.author.name}: {message.content}")
