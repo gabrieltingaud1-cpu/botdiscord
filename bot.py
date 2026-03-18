@@ -434,9 +434,9 @@ async def resume(ctx, nombre: int = 30):
     messages.reverse()
     messages = messages[:-1]
 
-    if not messages:
-        await ctx.send("❌ Aucun message à résumer dans ce salon.")
-        return
+    if len(messages) < 3:
+     await ctx.send("❌ Pas assez de vrais messages à résumer dans ce salon.\nEssaie dans un salon avec plus de conversations !")
+     return
 
     conversation = "\n".join(messages)
 
