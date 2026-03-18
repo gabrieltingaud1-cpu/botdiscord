@@ -179,7 +179,8 @@ async def resume_chat(interaction: discord.Interaction):
         messages = []
         async for message in interaction.channel.history(limit=50):
             if not message.author.bot and message.content:
-                messages.append(f"{message.author.name}: {message.content}")
+                if not message.content.startswith("/") and not message.content.startswith("!"):
+                    messages.append(f"{message.author.name}: {message.content}")
 
         messages.reverse()
 
