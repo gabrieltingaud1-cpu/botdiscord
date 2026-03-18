@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import os
 import random
 import json
+import aiohttp
 
 load_dotenv()
 
@@ -78,6 +79,51 @@ async def niveau(interaction: discord.Interaction, membre: discord.Member = None
     embed.set_thumbnail(url=membre.avatar.url if membre.avatar else membre.default_avatar.url)
     await interaction.response.send_message(embed=embed)
 
+@bot.tree.command(name="resume-chat", description="Résume les 50 derniers messages du salon")
+async def resume_chat(interaction: discord.Interaction):
+    await interaction.response.defer()
+
+    messages = []
+    async for message in interaction.channel.history(limit=50):
+        if not message.author.bot and message.content:
+            messages.append(f"{message.author.name}: {message.content}")
+
+    messages.reverse()
+
+    if not messages:
+        await interaction.followup.send("❌ Aucun message à résumer !")
+        return
+
+    conversation = "\n".join(messages)
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {os.getenv('GROQ_KEY')}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "llama3-8b-8192",
+                "max_tokens": 500,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "Tu es un assistant qui résume des conversations Discord en français de façon claire et concise."
+                    },
+                    {
+                        "role": "user",
+                        "content": f"Résume cette conversation Discord en 5 lignes maximum :\n\n{conversation}"
+                    }
+                ]
+            }
+        ) as resp:
+            data = await resp.json()
+            resume = data["choices"][0]["message"]["content"]
+
+    embed = discord.Embed(title="📝 Résumé du chat", description=resume, color=0x00bfff)
+    await interaction.followup.send(embed=embed)
+
 @bot.command()
 async def classement(ctx):
     if not xp_data:
@@ -137,6 +183,7 @@ async def help(ctx):
     embed.add_field(name="🌟 Général", value="`!ping` `!hello` `!help`", inline=False)
     embed.add_field(name="🎮 Jeux", value="`!pile_ou_face` `!dé` `!rps <pierre/feuille/ciseaux>` `!chiffre` `!deviner <nombre>`", inline=False)
     embed.add_field(name="⭐ Niveaux", value="`/niveau` `!classement`", inline=False)
+    embed.add_field(name="📝 Utilitaires", value="`/resume-chat`", inline=False)
     if ctx.author.id == MON_ID:
         embed.add_field(name="🔨 Modération", value="`!kick <membre>` `!ban <membre>` `!mute <membre>` `!unmute <membre>` `!clear <nombre>`", inline=False)
     await ctx.send(embed=embed)
