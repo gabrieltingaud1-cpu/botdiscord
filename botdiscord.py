@@ -59,6 +59,71 @@ async def on_message(message):
     sauvegarder_xp(xp_data)
     await bot.process_commands(message)
 
+# ================================
+#           GÉNÉRAL
+# ================================
+
+@bot.event
+async def on_ready():
+    print(f"Connecté en tant que {bot.user}")
+    await bot.tree.sync()
+    print("Commandes slash synchronisées !")
+
+@bot.event
+async def on_member_join(member):
+    salon = discord.utils.get(member.guild.text_channels, name="bienvenue")
+    if salon:
+        embed = discord.Embed(
+            title=f"Bienvenue sur {member.guild.name} ! 🎉",
+            description=f"Salut {member.mention} ! Bienvenue sur le serveur !\nOn est maintenant **{member.guild.member_count}** membres !",
+            color=0x00bfff
+        )
+        embed.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)
+        await salon.send(embed=embed)
+
+@bot.tree.command(name="ping", description="Voir la latence du bot")
+async def ping(interaction: discord.Interaction):
+    await interaction.response.send_message(f"Pong ! 🏓 {round(bot.latency * 1000)}ms")
+
+@bot.tree.command(name="hello", description="Le bot te dit bonjour")
+async def hello(interaction: discord.Interaction):
+    await interaction.response.send_message("Salut ! 👋")
+
+@bot.tree.command(name="help", description="Voir toutes les commandes disponibles")
+async def help(interaction: discord.Interaction):
+    embed = discord.Embed(title="Commandes du bot 📋", color=0x00bfff)
+    embed.add_field(
+        name="🌟 Général",
+        value="`/ping` `/hello` `/help`",
+        inline=False
+    )
+    embed.add_field(
+        name="🎮 Jeux",
+        value="`/pile_ou_face` `/de` `/rps` `/chiffre` `/deviner`",
+        inline=False
+    )
+    embed.add_field(
+        name="⭐ Niveaux",
+        value="`/niveau` `/classement`",
+        inline=False
+    )
+    embed.add_field(
+        name="📝 Utilitaires",
+        value="`/resume_chat`",
+        inline=False
+    )
+    if interaction.user.id == MON_ID:
+        embed.add_field(
+            name="🔨 Modération (propriétaire uniquement)",
+            value="`/kick` `/ban` `/mute` `/unmute` `/clear`",
+            inline=False
+        )
+    await interaction.response.send_message(embed=embed)
+
+# ================================
+#           NIVEAUX
+# ================================
+
 @bot.tree.command(name="niveau", description="Voir le niveau d'un membre")
 @app_commands.describe(membre="Le membre dont tu veux voir le niveau")
 async def niveau(interaction: discord.Interaction, membre: discord.Member = None):
@@ -79,7 +144,34 @@ async def niveau(interaction: discord.Interaction, membre: discord.Member = None
     embed.set_thumbnail(url=membre.avatar.url if membre.avatar else membre.default_avatar.url)
     await interaction.response.send_message(embed=embed)
 
-@bot.tree.command(name="resume-chat", description="Résume les 50 derniers messages du salon")
+@bot.tree.command(name="classement", description="Voir le classement XP du serveur")
+async def classement(interaction: discord.Interaction):
+    if not xp_data:
+        await interaction.response.send_message("Personne n'a encore de XP !")
+        return
+
+    tries = sorted(xp_data.items(), key=lambda x: (x[1]["niveau"], x[1]["xp"]), reverse=True)
+
+    embed = discord.Embed(title="🏆 Classement XP", color=0x00bfff)
+    medailles = ["🥇", "🥈", "🥉"]
+
+    for i, (user_id, data) in enumerate(tries[:10]):
+        membre = interaction.guild.get_member(int(user_id))
+        if membre:
+            medaille = medailles[i] if i < 3 else f"**#{i+1}**"
+            embed.add_field(
+                name=f"{medaille} {membre.name}",
+                value=f"Niveau {data['niveau']} • {data['xp']} XP",
+                inline=False
+            )
+
+    await interaction.response.send_message(embed=embed)
+
+# ================================
+#           UTILITAIRES
+# ================================
+
+@bot.tree.command(name="resume_chat", description="Résume les 50 derniers messages du salon")
 async def resume_chat(interaction: discord.Interaction):
     await interaction.response.defer()
 
@@ -124,91 +216,27 @@ async def resume_chat(interaction: discord.Interaction):
     embed = discord.Embed(title="📝 Résumé du chat", description=resume, color=0x00bfff)
     await interaction.followup.send(embed=embed)
 
-@bot.command()
-async def classement(ctx):
-    if not xp_data:
-        await ctx.send("Personne n'a encore de XP !")
-        return
-
-    tries = sorted(xp_data.items(), key=lambda x: (x[1]["niveau"], x[1]["xp"]), reverse=True)
-
-    embed = discord.Embed(title="🏆 Classement XP", color=0x00bfff)
-    medailles = ["🥇", "🥈", "🥉"]
-
-    for i, (user_id, data) in enumerate(tries[:10]):
-        membre = ctx.guild.get_member(int(user_id))
-        if membre:
-            medaille = medailles[i] if i < 3 else f"**#{i+1}**"
-            embed.add_field(
-                name=f"{medaille} {membre.name}",
-                value=f"Niveau {data['niveau']} • {data['xp']} XP",
-                inline=False
-            )
-
-    await ctx.send(embed=embed)
-
-# ================================
-#           GÉNÉRAL
-# ================================
-
-@bot.event
-async def on_ready():
-    print(f"Connecté en tant que {bot.user}")
-    await bot.tree.sync()
-    print("Commandes slash synchronisées !")
-
-@bot.event
-async def on_member_join(member):
-    salon = discord.utils.get(member.guild.text_channels, name="bienvenue")
-    if salon:
-        embed = discord.Embed(
-            title=f"Bienvenue sur {member.guild.name} ! 🎉",
-            description=f"Salut {member.mention} ! Bienvenue sur le serveur !\nOn est maintenant **{member.guild.member_count}** membres !",
-            color=0x00bfff
-        )
-        embed.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)
-        await salon.send(embed=embed)
-
-@bot.command()
-async def ping(ctx):
-    await ctx.send(f"Pong ! 🏓 {round(bot.latency * 1000)}ms")
-
-@bot.command()
-async def hello(ctx):
-    await ctx.send("Salut ! 👋")
-
-@bot.command()
-async def help(ctx):
-    embed = discord.Embed(title="Commandes du bot 📋", color=0x00bfff)
-    embed.add_field(name="🌟 Général", value="`!ping` `!hello` `!help`", inline=False)
-    embed.add_field(name="🎮 Jeux", value="`!pile_ou_face` `!dé` `!rps <pierre/feuille/ciseaux>` `!chiffre` `!deviner <nombre>`", inline=False)
-    embed.add_field(name="⭐ Niveaux", value="`/niveau` `!classement`", inline=False)
-    embed.add_field(name="📝 Utilitaires", value="`/resume-chat`", inline=False)
-    if ctx.author.id == MON_ID:
-        embed.add_field(name="🔨 Modération", value="`!kick <membre>` `!ban <membre>` `!mute <membre>` `!unmute <membre>` `!clear <nombre>`", inline=False)
-    await ctx.send(embed=embed)
-
 # ================================
 #           JEUX
 # ================================
 
-@bot.command()
-async def pile_ou_face(ctx):
-    await ctx.send(random.choice(["Pile ! 🪙", "Face ! 🪙"]))
+@bot.tree.command(name="pile_ou_face", description="Lance une pièce")
+async def pile_ou_face(interaction: discord.Interaction):
+    await interaction.response.send_message(random.choice(["Pile ! 🪙", "Face ! 🪙"]))
 
-@bot.command()
-async def dé(ctx):
-    await ctx.send(f"🎲 Tu as lancé un **{random.randint(1, 6)}** !")
+@bot.tree.command(name="de", description="Lance un dé à 6 faces")
+async def de(interaction: discord.Interaction):
+    await interaction.response.send_message(f"🎲 Tu as lancé un **{random.randint(1, 6)}** !")
 
-@bot.command()
-async def rps(ctx, choix: str):
-    choix = choix.lower()
+@bot.tree.command(name="rps", description="Pierre, feuille, ciseaux contre le bot")
+@app_commands.describe(choix="Ton choix : pierre, feuille ou ciseaux")
+@app_commands.choices(choix=[
+    app_commands.Choice(name="Pierre", value="pierre"),
+    app_commands.Choice(name="Feuille", value="feuille"),
+    app_commands.Choice(name="Ciseaux", value="ciseaux"),
+])
+async def rps(interaction: discord.Interaction, choix: str):
     options = ["pierre", "feuille", "ciseaux"]
-
-    if choix not in options:
-        await ctx.send("Choisis entre `pierre`, `feuille` ou `ciseaux` !")
-        return
-
     bot_choix = random.choice(options)
 
     if choix == bot_choix:
@@ -220,93 +248,108 @@ async def rps(ctx, choix: str):
     else:
         result = "Tu as perdu ! 😢"
 
-    await ctx.send(f"Tu as choisi **{choix}**, moi **{bot_choix}** → {result}")
+    await interaction.response.send_message(f"Tu as choisi **{choix}**, moi **{bot_choix}** → {result}")
 
 parties = {}
 
-@bot.command()
-async def chiffre(ctx):
-    parties[ctx.author.id] = random.randint(1, 100)
-    await ctx.send("J'ai choisi un chiffre entre 1 et 100, devine avec `!deviner <nombre>` !")
+@bot.tree.command(name="chiffre", description="Lance une partie de devinette (chiffre entre 1 et 100)")
+async def chiffre(interaction: discord.Interaction):
+    parties[interaction.user.id] = random.randint(1, 100)
+    await interaction.response.send_message("J'ai choisi un chiffre entre 1 et 100, devine avec `/deviner` !")
 
-@bot.command()
-async def deviner(ctx, nombre: int):
-    if ctx.author.id not in parties:
-        await ctx.send("Lance d'abord une partie avec `!chiffre` !")
+@bot.tree.command(name="deviner", description="Devine le chiffre secret")
+@app_commands.describe(nombre="Ton nombre à deviner")
+async def deviner(interaction: discord.Interaction, nombre: int):
+    if interaction.user.id not in parties:
+        await interaction.response.send_message("Lance d'abord une partie avec `/chiffre` !")
         return
 
-    secret = parties[ctx.author.id]
+    secret = parties[interaction.user.id]
 
     if nombre < secret:
-        await ctx.send("📈 C'est plus grand !")
+        await interaction.response.send_message("📈 C'est plus grand !")
     elif nombre > secret:
-        await ctx.send("📉 C'est plus petit !")
+        await interaction.response.send_message("📉 C'est plus petit !")
     else:
-        await ctx.send(f"🎉 Bravo ! C'était bien **{secret}** !")
-        del parties[ctx.author.id]
+        await interaction.response.send_message(f"🎉 Bravo ! C'était bien **{secret}** !")
+        del parties[interaction.user.id]
 
 # ================================
 #         MODÉRATION
 # ================================
 
-def proprietaire_uniquement():
-    async def predicate(ctx):
-        if ctx.author.id != MON_ID:
-            await ctx.send("❌ Tu n'as pas la permission de faire ça !")
-            return False
-        return True
-    return commands.check(predicate)
+def est_proprietaire(interaction: discord.Interaction) -> bool:
+    return interaction.user.id == MON_ID
 
-@bot.command()
-@proprietaire_uniquement()
-async def kick(ctx, membre: discord.Member, *, raison="Aucune raison"):
+@bot.tree.command(name="kick", description="Kick un membre du serveur")
+@app_commands.describe(membre="Le membre à kick", raison="La raison du kick")
+async def kick(interaction: discord.Interaction, membre: discord.Member, raison: str = "Aucune raison"):
+    if not est_proprietaire(interaction):
+        await interaction.response.send_message("❌ Tu n'as pas la permission de faire ça !", ephemeral=True)
+        return
     await membre.kick(reason=raison)
-    await ctx.send(f"👢 **{membre}** a été kick. Raison : {raison}")
+    await interaction.response.send_message(f"👢 **{membre}** a été kick. Raison : {raison}")
 
-@bot.command()
-@proprietaire_uniquement()
-async def ban(ctx, membre: discord.Member, *, raison="Aucune raison"):
+@bot.tree.command(name="ban", description="Ban un membre du serveur")
+@app_commands.describe(membre="Le membre à ban", raison="La raison du ban")
+async def ban(interaction: discord.Interaction, membre: discord.Member, raison: str = "Aucune raison"):
+    if not est_proprietaire(interaction):
+        await interaction.response.send_message("❌ Tu n'as pas la permission de faire ça !", ephemeral=True)
+        return
     await membre.ban(reason=raison)
-    await ctx.send(f"🔨 **{membre}** a été banni. Raison : {raison}")
+    await interaction.response.send_message(f"🔨 **{membre}** a été banni. Raison : {raison}")
 
-@bot.command()
-@proprietaire_uniquement()
-async def mute(ctx, membre: discord.Member):
-    role_mute = discord.utils.get(ctx.guild.roles, name="Muted")
+@bot.tree.command(name="mute", description="Mute un membre du serveur")
+@app_commands.describe(membre="Le membre à mute")
+async def mute(interaction: discord.Interaction, membre: discord.Member):
+    if not est_proprietaire(interaction):
+        await interaction.response.send_message("❌ Tu n'as pas la permission de faire ça !", ephemeral=True)
+        return
 
+    role_mute = discord.utils.get(interaction.guild.roles, name="Muted")
     if not role_mute:
-        role_mute = await ctx.guild.create_role(name="Muted")
-        for channel in ctx.guild.channels:
+        role_mute = await interaction.guild.create_role(name="Muted")
+        for channel in interaction.guild.channels:
             await channel.set_permissions(role_mute, send_messages=False, speak=False)
 
     await membre.add_roles(role_mute)
-    await ctx.send(f"🔇 **{membre}** a été mute !")
+    await interaction.response.send_message(f"🔇 **{membre}** a été mute !")
 
-@bot.command()
-@proprietaire_uniquement()
-async def unmute(ctx, membre: discord.Member):
-    role_mute = discord.utils.get(ctx.guild.roles, name="Muted")
+@bot.tree.command(name="unmute", description="Unmute un membre du serveur")
+@app_commands.describe(membre="Le membre à unmute")
+async def unmute(interaction: discord.Interaction, membre: discord.Member):
+    if not est_proprietaire(interaction):
+        await interaction.response.send_message("❌ Tu n'as pas la permission de faire ça !", ephemeral=True)
+        return
+
+    role_mute = discord.utils.get(interaction.guild.roles, name="Muted")
     if role_mute in membre.roles:
         await membre.remove_roles(role_mute)
-        await ctx.send(f"🔊 **{membre}** a été unmute !")
+        await interaction.response.send_message(f"🔊 **{membre}** a été unmute !")
     else:
-        await ctx.send(f"{membre} n'est pas mute !")
+        await interaction.response.send_message(f"{membre} n'est pas mute !")
 
-@bot.command()
-@proprietaire_uniquement()
-async def clear(ctx, nombre: int):
-    await ctx.channel.purge(limit=nombre + 1)
-    await ctx.send(f"🗑️ {nombre} messages supprimés !", delete_after=3)
+@bot.tree.command(name="clear", description="Supprimer des messages dans le salon")
+@app_commands.describe(nombre="Nombre de messages à supprimer")
+async def clear(interaction: discord.Interaction, nombre: int):
+    if not est_proprietaire(interaction):
+        await interaction.response.send_message("❌ Tu n'as pas la permission de faire ça !", ephemeral=True)
+        return
+    await interaction.response.defer(ephemeral=True)
+    await interaction.channel.purge(limit=nombre)
+    await interaction.followup.send(f"🗑️ {nombre} messages supprimés !", ephemeral=True)
 
 # ================================
 #         ERREURS
 # ================================
 
-@bot.event
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.MemberNotFound):
-        await ctx.send("❌ Membre introuvable !")
-    elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send("❌ Il manque un argument à ta commande !")
+@bot.tree.error
+async def on_app_command_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
+    if isinstance(error, app_commands.MissingRequiredArgument):
+        await interaction.response.send_message("❌ Il manque un argument à ta commande !", ephemeral=True)
+    elif isinstance(error, app_commands.MemberNotFound):
+        await interaction.response.send_message("❌ Membre introuvable !", ephemeral=True)
+    else:
+        await interaction.response.send_message(f"❌ Une erreur est survenue : {error}", ephemeral=True)
 
 bot.run(os.getenv("TOKEN"))
