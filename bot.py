@@ -449,8 +449,8 @@ async def resume(ctx, nombre: int = 30):
             "model": "llama3-8b-8192",
             "messages": [
                 {
-                    "role": "system",
-                    "content": "Tu es un assistant qui résume des conversations Discord en français. Fais un résumé court et clair des points principaux de la conversation."
+                   "role": "system",
+                   "content": "Tu es un assistant qui résume des conversations Discord en français. Fais un résumé court et clair des points principaux de la conversation. IMPORTANT : ignore complètement les messages qui sont des commandes (qui commencent par ! ou /), les messages très courts, et les messages techniques. Résume uniquement les vraies discussions entre les utilisateurs. S'il n'y a pas assez de vraies discussions, dis simplement qu'il n'y a pas assez de contenu à résumer."
                 },
                 {
                     "role": "user",
